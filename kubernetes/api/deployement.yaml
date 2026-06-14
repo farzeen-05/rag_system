@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rag-api-deployment
+  namespace: rag-system
+spec:
+  replicas: 2    # 2 API replicas for availability (if one dies, other serves traffic)
+  
+  selector:
+    matchLabels:
+      app: rag-api
+  
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  
+  template:
+    metadata:
+      labels:
+        app: rag-api
+    spec:
+      # Graceful shutdown: when K8s terminates this pod, it:
+      # 1. Stops sending new requests (removes from Service endpoints)
+      # 2. Waits terminationGracePeriodSeconds for in-flight requests
+      # 3. Sends SIGTERM → app should finish current requests and exit
+      # 4. After grace period, sends SIGKILL
+      terminationGracePeriodSeconds: 30
+      
+      containers:
+        - name: rag-api
+          # ECR image URI (we'll build and push this)
+          image: YOUR_AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/rag-api:latest
+          
+          ports:
+            - containerPort: 8080
+          
+          # Load config from ConfigMap
+          envFrom:
+            - configMapRef:
+                name: rag-api-config
+          
+          # Load secrets separately (they're sensitive)
+          env:
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: rag-secrets
+                  key: OPENAI_API_KEY
+                  optional: true    # Don't fail if secret doesn't have this key
+          
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "2Gi"    # LLM calls can spike memory
+              cpu: "1000m"     # 1 full CPU core for busy periods
+          
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 60    # Model takes time to load!
+            periodSeconds: 30
+            failureThreshold: 3
+          
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 60    # Wait for embedding model to load
+            periodSeconds: 10
+            failureThreshold: 5

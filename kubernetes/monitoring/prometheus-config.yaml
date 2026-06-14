@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: rag-system
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+    scrape_configs:
+      - job_name: 'rag-api'
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names: [rag-system]
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            regex: rag-api
+            action: keep

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rag-api-config
+  namespace: rag-system
+data:
+  CHROMA_HOST: "chroma-service"
+  CHROMA_PORT: "8000"
+  LLM_PROVIDER: "ollama"
+  LLM_MODEL: "llama3.2:1b"
+  EMBEDDING_MODEL_NAME: "sentence-transformers/all-MiniLM-L6-v2"
+  RETRIEVAL_TOP_K: "5"
+  ENVIRONMENT: "production"
+  CHROMA_COLLECTION_NAME: "rag_documents"
+  OLLAMA_BASE_URL: "http://172.31.21.95:11434"

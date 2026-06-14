@@ -1,0 +1,14 @@
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: rag-api-service
+  namespace: rag-system
+spec:
+  type: ClusterIP    # Internal only; Ingress routes external traffic
+  selector:
+    app: rag-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080

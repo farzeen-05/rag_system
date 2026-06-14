@@ -1,0 +1,87 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chroma-deployment
+  namespace: rag-system
+spec:
+  replicas: 1    # Only 1 replica for ChromaDB
+  # WHY? ChromaDB uses local disk storage with ReadWriteOnce PVC.
+  # Multiple replicas would fight over the same disk.
+  # For HA ChromaDB, use a distributed DB like Pinecone instead.
+  
+  selector:
+    # Deployment manages pods that match these labels
+    matchLabels:
+      app: chroma
+  
+  # Rolling update strategy:
+  # When you deploy a new version, Kubernetes:
+  # 1. Starts new pod (maxSurge: 1 means 2 pods briefly)
+  # 2. Waits for new pod to be healthy
+  # 3. Terminates old pod
+  # Result: zero downtime deployment
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1           # Can temporarily run 2 replicas
+      maxUnavailable: 0     # Never have 0 replicas (always available)
+  
+  template:
+    metadata:
+      labels:
+        app: chroma    # Must match selector.matchLabels above
+    spec:
+      containers:
+        - name: chroma
+          image: chromadb/chroma:0.5.0
+          ports:
+            - containerPort: 8000
+          
+          env:
+            - name: ANONYMIZED_TELEMETRY
+              value: "false"
+            - name: IS_PERSISTENT
+              value: "true"
+          
+          volumeMounts:
+            - name: chroma-storage
+              # ChromaDB's data directory
+              mountPath: /chroma/chroma
+          
+          # Resources: tell Kubernetes how much CPU/RAM this pod needs.
+          # WHY? K8s scheduler uses this to decide which NODE to place pod on.
+          # Requests: guaranteed minimum
+          # Limits: maximum allowed (pod killed if exceeded)
+          resources:
+            requests:
+              memory: "512Mi"   # 512 megabytes
+              cpu: "250m"       # 250 millicores = 0.25 CPU
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+          
+          # Liveness probe: "is this container still running correctly?"
+          # Kubernetes restarts container if this fails 3 times.
+          livenessProbe:
+            httpGet:
+              path: /api/v1/heartbeat
+              port: 8000
+            initialDelaySeconds: 10    # Wait 10s before first check
+            periodSeconds: 30          # Check every 30 seconds
+            failureThreshold: 3        # Restart after 3 failures
+          
+          # Readiness probe: "is this container ready to receive traffic?"
+          # Service only routes to pods where readiness probe passes.
+          readinessProbe:
+            httpGet:
+              path: /api/v1/heartbeat
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      
+      volumes:
+        - name: chroma-storage
+          persistentVolumeClaim:
+            # Claims the PVC we defined above
+            claimName: chroma-pvc

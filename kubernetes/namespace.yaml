@@ -1,0 +1,8 @@
+apiVersion: v1          # Which Kubernetes API version handles this resource type
+kind: Namespace         # What type of resource
+metadata:
+  name: rag-system      # All RAG resources live in this namespace
+  labels:
+    # Labels are key-value pairs for organization and filtering
+    app: rag-system
+    environment: production

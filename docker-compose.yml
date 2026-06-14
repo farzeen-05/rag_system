@@ -1,0 +1,112 @@
+# docker-compose.yml
+# For LOCAL DEVELOPMENT — mirrors production without Kubernetes complexity.
+
+version: "3.9"
+
+# ── Named Volumes ────────────────────────────────────────────────────
+# Volumes persist data between container restarts.
+# Without volumes: every time you restart ChromaDB, all vectors are gone!
+volumes:
+  chroma_data:        # ChromaDB vector storage
+    driver: local
+  ollama_models:      # LLM model weights (~4GB for llama3.2)
+    driver: local
+
+# ── Network ──────────────────────────────────────────────────────────
+# Custom bridge network: containers can reach each other by SERVICE NAME.
+# api → http://chroma:8000  (not localhost!)
+# api → http://ollama:11434
+networks:
+  rag_network:
+    driver: bridge
+
+services:
+
+  # ── ChromaDB Vector Database ───────────────────────────────────────
+  chroma:
+    image: chromadb/chroma:0.5.0
+    ports:
+      - "8001:8000"    # HOST:CONTAINER — access at localhost:8001 for debugging
+    volumes:
+      - chroma_data:/chroma/chroma   # Persist vectors to named volume
+    environment:
+      # Disable auth for local dev (enable in production!)
+      CHROMA_SERVER_AUTHN_PROVIDER: ""
+      ANONYMIZED_TELEMETRY: "false"
+    networks:
+      - rag_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ── Ollama LLM Server ──────────────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama    # Cache downloaded models
+    networks:
+      - rag_network
+    # Ollama needs to download models on first run.
+    # Run: docker-compose exec ollama ollama pull llama3.2:1b
+    # The :1b tag = 1 billion parameters (tiny, fits in 1GB RAM)
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ── RAG API Service ────────────────────────────────────────────────
+  api:
+    build:
+      context: ./services/api
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      # These override settings in config.py
+      CHROMA_HOST: chroma      # Docker service name = hostname!
+      CHROMA_PORT: "8000"
+      OLLAMA_BASE_URL: "http://ollama:11434"
+      LLM_PROVIDER: "ollama"
+      LLM_MODEL: "llama3.2:1b"
+      ENVIRONMENT: "development"
+      DEBUG: "true"
+    volumes:
+      # Hot reload: mount source code so changes reflect without rebuild
+      - ./services/api/app:/app
+    depends_on:
+      chroma:
+        condition: service_healthy    # Wait for ChromaDB to be ready
+      ollama:
+        condition: service_healthy    # Wait for Ollama to be ready
+    networks:
+      - rag_network
+    restart: unless-stopped          # Auto-restart if it crashes
+
+  # ── Ingestion Job ──────────────────────────────────────────────────
+  # This is NOT a long-running service.
+  # It runs once, processes documents, and exits.
+  # Run manually: docker-compose run --rm ingestion
+  ingestion:
+    build:
+      context: ./services/ingestion
+      dockerfile: Dockerfile
+    environment:
+      CHROMA_HOST: chroma
+      CHROMA_PORT: "8000"
+      DOCUMENTS_PATH: "/documents"
+    volumes:
+      - ./docs/sample_documents:/documents:ro  # :ro = read-only mount
+    depends_on:
+      chroma:
+        condition: service_healthy
+    networks:
+      - rag_network
+    profiles:
+      - ingestion    # Only runs when explicitly called
+      # docker-compose --profile ingestion run ingestion
