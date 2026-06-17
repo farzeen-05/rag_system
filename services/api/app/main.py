@@ -10,6 +10,7 @@ WHY FASTAPI?
 """
 
 from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, List
@@ -107,6 +108,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/")
+async def serve_frontend():
+    return FileResponse("static_index.html")
 
 
 # ── Dependency Injection ─────────────────────────────────────────────

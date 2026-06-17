@@ -4,16 +4,12 @@ metadata:
   name: rag-ingress
   namespace: rag-system
   annotations:
-    # nginx ingress controller annotations
-    nginx.ingress.kubernetes.io/rewrite-target: /
-    # Rate limiting: max 100 requests/minute per IP
-    # Prevents abuse and protects LLM costs
-    nginx.ingress.kubernetes.io/limit-rps: "10"
-    nginx.ingress.kubernetes.io/limit-connections: "5"
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
 spec:
-  ingressClassName: nginx
   rules:
-    - http:
+    - host: farz-rag.duckdns.org
+      http:
         paths:
           - path: /
             pathType: Prefix
