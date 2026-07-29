@@ -6,6 +6,7 @@
 ![Kubernetes](https://img.shields.io/badge/Kubernetes-k3s-326CE5?logo=kubernetes)
 ![ChromaDB](https://img.shields.io/badge/ChromaDB-Vector%20Store-FF6F00)
 ![Ollama](https://img.shields.io/badge/Ollama-Local%20LLM-000000)
+![Groq](https://img.shields.io/badge/Groq-AI-F55036?logo=groq&logoColor=white)
 ![AWS](https://img.shields.io/badge/AWS-EC2-FF9900?logo=amazonaws)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
@@ -258,7 +259,7 @@ ECE Graduate | ML & Full-Stack Developer | MLOps & Cloud
 
 [![GitHub](https://img.shields.io/badge/GitHub-Follow-181717?logo=github)](https://github.com/farzeen-05)
 
-[![Email](https://img.shields.io/badge/Email-farzeen98453@gmail.com-EA4335?style=flat&logo=gmail)](mailto:farzeen98453@gmail.com)
+[![Email](https://img.shields.io/badge/Email-farzeen99453@gmail.com-EA4335?style=flat&logo=gmail)](mailto:farzeen99453@gmail.com)
  
 
 ---
