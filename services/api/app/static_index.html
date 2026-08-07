@@ -16,6 +16,7 @@
     --accent: #5eead4;
     --accent-dim: #1f3b38;
     --warn: #f59e0b;
+    --red: #ef4444;
     --mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
     --sans: 'Inter', -apple-system, sans-serif;
   }
@@ -28,6 +29,165 @@
     font-family: var(--sans);
     height: 100%;
   }
+
+  /* ========== AUTH SCREEN ========== */
+  #authScreen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  .auth-card {
+    width: 100%;
+    max-width: 400px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 36px 32px;
+  }
+
+  .auth-logo {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .auth-title {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    margin: 0 0 4px;
+  }
+  .auth-sub {
+    font-size: 12.5px;
+    color: var(--text-dim);
+    margin: 0 0 28px;
+  }
+
+  .auth-tabs {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .auth-tab {
+    flex: 1;
+    padding: 9px;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 11.5px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .auth-tab.active {
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+
+  .auth-field {
+    margin-bottom: 14px;
+  }
+  .auth-field label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 6px;
+  }
+  .auth-field input {
+    width: 100%;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13.5px;
+    padding: 10px 13px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .auth-field input:focus { border-color: var(--accent); }
+
+  .auth-btn {
+    width: 100%;
+    padding: 11px;
+    background: var(--accent);
+    color: #0b0d0f;
+    border: none;
+    border-radius: 7px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: opacity 0.15s;
+  }
+  .auth-btn:hover { opacity: 0.88; }
+  .auth-btn:disabled { opacity: 0.4; cursor: default; }
+
+  .auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 18px 0;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+  .auth-divider::before, .auth-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  .google-btn {
+    width: 100%;
+    padding: 10px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .google-btn:hover { border-color: var(--accent); background: var(--accent-dim); }
+
+  .google-icon {
+    width: 18px; height: 18px;
+    flex-shrink: 0;
+  }
+
+  .auth-error {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 6px;
+    padding: 9px 12px;
+    font-size: 12.5px;
+    color: var(--red);
+    margin-bottom: 14px;
+    display: none;
+  }
+  .auth-error.show { display: block; }
+
+  /* ========== MAIN APP (hidden until logged in) ========== */
+  #appScreen { display: none; height: 100vh; }
 
   .shell {
     display: grid;
@@ -74,6 +234,34 @@
     margin-bottom: 24px;
   }
 
+  .user-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+    padding: 8px 10px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+  }
+  .user-row .user-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--accent); }
+  .logout-btn {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 2px 7px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .logout-btn:hover { border-color: var(--red); color: var(--red); }
+
   .status-row {
     display: flex;
     align-items: center;
@@ -95,7 +283,7 @@
     transition: background 0.2s;
   }
   .dot.ok { background: var(--accent); box-shadow: 0 0 8px rgba(94,234,212,0.5); }
-  .dot.bad { background: #ef4444; }
+  .dot.bad { background: var(--red); }
 
   .section-label {
     font-family: var(--mono);
@@ -125,10 +313,7 @@
     color: var(--accent);
     margin-bottom: 6px;
   }
-  .dropzone-text {
-    font-size: 12.5px;
-    color: var(--text);
-  }
+  .dropzone-text { font-size: 12.5px; color: var(--text); }
   .dropzone-hint {
     font-family: var(--mono);
     font-size: 10.5px;
@@ -155,12 +340,7 @@
     border-radius: 6px;
     font-size: 12px;
   }
-  .doc-item .name {
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+  .doc-item .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .doc-item .state {
     font-family: var(--mono);
     font-size: 10px;
@@ -170,13 +350,9 @@
   }
   .state.indexing { color: var(--warn); background: rgba(245,158,11,0.12); }
   .state.done { color: var(--accent); background: var(--accent-dim); }
-  .state.error { color: #ef4444; background: rgba(239,68,68,0.12); }
+  .state.error { color: var(--red); background: rgba(239,68,68,0.12); }
 
-  .empty-hint {
-    font-size: 12px;
-    color: var(--text-dim);
-    line-height: 1.5;
-  }
+  .empty-hint { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
 
   .stats {
     margin-top: auto;
@@ -205,16 +381,8 @@
     align-items: baseline;
     justify-content: space-between;
   }
-  .chat-header h1 {
-    font-size: 14px;
-    font-weight: 600;
-    margin: 0;
-  }
-  .chat-header .latency {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text-dim);
-  }
+  .chat-header h1 { font-size: 14px; font-weight: 600; margin: 0; }
+  .chat-header .latency { font-family: var(--mono); font-size: 11px; color: var(--text-dim); }
 
   .messages {
     flex: 1;
@@ -225,36 +393,12 @@
     gap: 22px;
   }
 
-  .intro {
-    max-width: 460px;
-    margin: 40px auto;
-    text-align: center;
-  }
-  .intro-mark {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--accent);
-    letter-spacing: 1px;
-    margin-bottom: 10px;
-  }
-  .intro h2 {
-    font-size: 20px;
-    font-weight: 600;
-    margin: 0 0 10px;
-    letter-spacing: -0.3px;
-  }
-  .intro p {
-    font-size: 13px;
-    color: var(--text-dim);
-    line-height: 1.6;
-    margin: 0;
-  }
+  .intro { max-width: 460px; margin: 40px auto; text-align: center; }
+  .intro-mark { font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: 1px; margin-bottom: 10px; }
+  .intro h2 { font-size: 20px; font-weight: 600; margin: 0 0 10px; letter-spacing: -0.3px; }
+  .intro p { font-size: 13px; color: var(--text-dim); line-height: 1.6; margin: 0; }
 
-  .msg {
-    display: flex;
-    gap: 12px;
-    max-width: 720px;
-  }
+  .msg { display: flex; gap: 12px; max-width: 720px; }
   .msg.user { align-self: flex-end; flex-direction: row-reverse; }
   .msg .avatar {
     width: 26px; height: 26px;
@@ -279,12 +423,7 @@
   .msg.user .bubble { background: var(--accent-dim); color: var(--text); border: 1px solid rgba(94,234,212,0.25); }
   .msg.bot .bubble { background: var(--panel-2); border: 1px solid var(--line); }
 
-  .sources {
-    margin-top: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
+  .sources { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
   .source-chip {
     font-family: var(--mono);
     font-size: 10.5px;
@@ -299,11 +438,7 @@
   }
   .source-chip span.score { color: var(--accent); flex-shrink: 0; }
 
-  .typing {
-    display: flex;
-    gap: 4px;
-    padding: 4px 0;
-  }
+  .typing { display: flex; gap: 4px; padding: 4px 0; }
   .typing span {
     width: 5px; height: 5px;
     border-radius: 50%;
@@ -314,10 +449,7 @@
   .typing span:nth-child(3) { animation-delay: 0.4s; }
   @keyframes blink { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
 
-  .composer {
-    padding: 18px 28px 24px;
-    border-top: 1px solid var(--line);
-  }
+  .composer { padding: 18px 28px 24px; border-top: 1px solid var(--line); }
   .composer-inner {
     display: flex;
     align-items: flex-end;
@@ -380,8 +512,8 @@
   .mic-btn:hover { border-color: var(--accent); color: var(--accent); }
   .mic-btn.listening {
     background: rgba(239,68,68,0.12);
-    border-color: #ef4444;
-    color: #ef4444;
+    border-color: var(--red);
+    color: var(--red);
     animation: pulse-mic 1.2s infinite;
   }
   @keyframes pulse-mic {
@@ -470,73 +602,283 @@
 </head>
 <body>
 
-<div class="shell">
-  <aside class="sidebar">
-    <div class="brand">
-      <span class="brand-mark">&gt;_</span>
-      <span class="brand-name">RAG Console</span>
-    </div>
-    <div class="brand-sub">retrieval-augmented Q&A</div>
+<!-- ========== AUTH SCREEN ========== -->
+<div id="authScreen">
+  <div class="auth-card">
+    <div class="auth-logo">&gt;_ rag.console</div>
+    <h1 class="auth-title">Sign in</h1>
+    <p class="auth-sub">Access your document Q&A workspace.</p>
 
-    <div class="status-row" id="statusRow">
-      <span class="dot" id="statusDot"></span>
-      <span id="statusText">checking api…</span>
-    </div>
-
-    <div class="section-label">add documents</div>
-    <div class="dropzone" id="dropzone">
-      <div class="dropzone-icon">↑</div>
-      <div class="dropzone-text">Drop a file or click to browse</div>
-      <div class="dropzone-hint">.txt &nbsp;·&nbsp; .md &nbsp;·&nbsp; .pdf</div>
-    </div>
-    <input type="file" id="fileInput" accept=".txt,.md,.pdf" multiple>
-
-    <div class="section-label">indexed</div>
-    <div class="doc-list" id="docList">
-      <div class="empty-hint">No documents yet. Upload one to start asking questions about it.</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">sign in</button>
+      <button class="auth-tab" id="tabRegister" onclick="switchTab('register')">register</button>
     </div>
 
-    <div class="stats">
-      <span>chunks: <b id="chunkCount">0</b></span>
-      <span>docs: <b id="docCount">0</b></span>
-    </div>
-  </aside>
+    <div class="auth-error" id="authError"></div>
 
-  <main class="chat-area">
-    <div class="chat-header">
-      <h1>Ask your documents</h1>
-      <div style="display:flex; align-items:center; gap:16px;">
-        <span class="latency" id="latencyTag"></span>
-        <label class="speaker-toggle">
-          <input type="checkbox" id="speakToggle" checked>
-          <span class="toggle-track"><span class="toggle-thumb"></span></span>
-          speak answers
-        </label>
+    <div class="auth-field">
+      <label>username</label>
+      <input type="text" id="authUsername" placeholder="your username" autocomplete="username">
+    </div>
+    <div class="auth-field">
+      <label>password</label>
+      <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="auth-btn" id="authSubmitBtn" onclick="handleAuthSubmit()">sign in</button>
+
+    <div class="auth-divider">or</div>
+
+    <button class="google-btn" onclick="handleGoogleLogin()">
+      <svg class="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      Continue with Google
+    </button>
+  </div>
+</div>
+
+<!-- ========== MAIN APP ========== -->
+<div id="appScreen">
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-mark">&gt;_</span>
+        <span class="brand-name">RAG Console</span>
       </div>
-    </div>
+      <div class="brand-sub">retrieval-augmented Q&A</div>
 
-    <div class="messages" id="messages">
-      <div class="intro" id="intro">
-        <div class="intro-mark">// rag.query()</div>
-        <h2>Upload, then ask.</h2>
-        <p>Add a document on the left, wait for it to finish indexing, then ask anything about it below. Answers are generated only from what you've uploaded.</p>
+      <div class="user-row">
+        <span class="user-name" id="userLabel">—</span>
+        <button class="logout-btn" onclick="handleLogout()">logout</button>
       </div>
-    </div>
 
-    <div class="composer">
-      <div class="composer-inner">
-        <textarea id="questionInput" placeholder="Ask a question about your documents…" rows="1"></textarea>
-        <button class="mic-btn" id="micBtn" title="Speak your question">●</button>
-        <button class="send-btn" id="sendBtn">→</button>
+      <div class="status-row" id="statusRow">
+        <span class="dot" id="statusDot"></span>
+        <span id="statusText">checking api…</span>
       </div>
-      <div class="composer-hint">Enter to send · Shift+Enter for a new line · 🎤 click mic to speak</div>
-    </div>
-  </main>
+
+      <div class="section-label">add documents</div>
+      <div class="dropzone" id="dropzone">
+        <div class="dropzone-icon">↑</div>
+        <div class="dropzone-text">Drop a file or click to browse</div>
+        <div class="dropzone-hint">.txt &nbsp;·&nbsp; .md &nbsp;·&nbsp; .pdf</div>
+      </div>
+      <input type="file" id="fileInput" accept=".txt,.md,.pdf" multiple>
+
+      <div class="section-label">indexed</div>
+      <div class="doc-list" id="docList">
+        <div class="empty-hint">No documents yet. Upload one to start asking questions about it.</div>
+      </div>
+
+      <div class="stats">
+        <span>chunks: <b id="chunkCount">0</b></span>
+        <span>docs: <b id="docCount">0</b></span>
+      </div>
+    </aside>
+
+    <main class="chat-area">
+      <div class="chat-header">
+        <h1>Ask your documents</h1>
+        <div style="display:flex; align-items:center; gap:16px;">
+          <span class="latency" id="latencyTag"></span>
+          <label class="speaker-toggle">
+            <input type="checkbox" id="speakToggle" checked>
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            speak answers
+          </label>
+        </div>
+      </div>
+
+      <div class="messages" id="messages">
+        <div class="intro" id="intro">
+          <div class="intro-mark">// rag.query()</div>
+          <h2>Upload, then ask.</h2>
+          <p>Add a document on the left, wait for it to finish indexing, then ask anything about it below. Answers are generated only from what you've uploaded.</p>
+        </div>
+      </div>
+
+      <div class="composer">
+        <div class="composer-inner">
+          <textarea id="questionInput" placeholder="Ask a question about your documents…" rows="1"></textarea>
+          <button class="mic-btn" id="micBtn" title="Speak your question">●</button>
+          <button class="send-btn" id="sendBtn">→</button>
+        </div>
+        <div class="composer-hint">Enter to send · Shift+Enter for a new line · 🎤 click mic to speak</div>
+      </div>
+    </main>
+  </div>
 </div>
 
 <script>
 const API_BASE = window.location.origin;
 
+// ========== AUTH STATE ==========
+let authToken = localStorage.getItem('rag_token') || null;
+let currentUser = localStorage.getItem('rag_user') || null;
+let activeTab = 'login';
+
+function authHeaders() {
+  const h = { 'Content-Type': 'application/json' };
+  if (authToken) h['Authorization'] = 'Bearer ' + authToken;
+  return h;
+}
+
+// On load: check if we have a valid token
+window.addEventListener('DOMContentLoaded', async () => {
+  // If came back from Google OAuth (cookie set), verify session
+  if (authToken) {
+    const ok = await verifyToken();
+    if (ok) { showApp(); return; }
+  }
+  // Check cookie-based session (Google OAuth)
+  const ok = await verifyTokenViaCookie();
+  if (ok) { showApp(); return; }
+  showAuth();
+});
+
+async function verifyToken() {
+  try {
+    const res = await fetch(`${API_BASE}/auth/me`, {
+      headers: { 'Authorization': 'Bearer ' + authToken }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      currentUser = data.username;
+      localStorage.setItem('rag_user', currentUser);
+      return true;
+    }
+  } catch (e) {}
+  authToken = null;
+  localStorage.removeItem('rag_token');
+  return false;
+}
+
+async function verifyTokenViaCookie() {
+  try {
+    const res = await fetch(`${API_BASE}/auth/me`, { credentials: 'include' });
+    if (res.ok) {
+      const data = await res.json();
+      currentUser = data.username;
+      localStorage.setItem('rag_user', currentUser);
+      return true;
+    }
+  } catch (e) {}
+  return false;
+}
+
+function showAuth() {
+  document.getElementById('authScreen').style.display = 'flex';
+  document.getElementById('appScreen').style.display = 'none';
+}
+
+function showApp() {
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'block';
+  document.getElementById('userLabel').textContent = currentUser || '—';
+  checkHealth();
+  refreshStats();
+  setInterval(checkHealth, 15000);
+}
+
+// ---------- Auth tabs ----------
+function switchTab(tab) {
+  activeTab = tab;
+  document.getElementById('tabLogin').className = 'auth-tab' + (tab === 'login' ? ' active' : '');
+  document.getElementById('tabRegister').className = 'auth-tab' + (tab === 'register' ? ' active' : '');
+  document.getElementById('authSubmitBtn').textContent = tab === 'login' ? 'sign in' : 'create account';
+  clearAuthError();
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('authError');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+function clearAuthError() {
+  document.getElementById('authError').classList.remove('show');
+}
+
+// Allow Enter key on password field
+document.addEventListener('DOMContentLoaded', () => {
+  const pw = document.getElementById('authPassword');
+  if (pw) pw.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleAuthSubmit(); });
+  const un = document.getElementById('authUsername');
+  if (un) un.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleAuthSubmit(); });
+});
+
+async function handleAuthSubmit() {
+  const username = document.getElementById('authUsername').value.trim();
+  const password = document.getElementById('authPassword').value;
+  clearAuthError();
+
+  if (!username || !password) { showAuthError('Please enter username and password.'); return; }
+
+  const btn = document.getElementById('authSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = activeTab === 'login' ? 'signing in…' : 'creating…';
+
+  try {
+    if (activeTab === 'login') {
+      // OAuth2 form login
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || 'Invalid username or password.');
+      }
+      const data = await res.json();
+      authToken = data.access_token;
+      currentUser = username;
+      localStorage.setItem('rag_token', authToken);
+      localStorage.setItem('rag_user', currentUser);
+      showApp();
+    } else {
+      // Register
+      const res = await fetch(`${API_BASE}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || 'Registration failed.');
+      }
+      const data = await res.json();
+      authToken = data.access_token;
+      currentUser = username;
+      localStorage.setItem('rag_token', authToken);
+      localStorage.setItem('rag_user', currentUser);
+      showApp();
+    }
+  } catch (e) {
+    showAuthError(e.message);
+    btn.disabled = false;
+    btn.textContent = activeTab === 'login' ? 'sign in' : 'create account';
+  }
+}
+
+function handleGoogleLogin() {
+  window.location.href = `${API_BASE}/auth/google`;
+}
+
+async function handleLogout() {
+  try {
+    await fetch(`${API_BASE}/auth/logout`, { method: 'POST', credentials: 'include' });
+  } catch (e) {}
+  authToken = null;
+  currentUser = null;
+  localStorage.removeItem('rag_token');
+  localStorage.removeItem('rag_user');
+  showAuth();
+}
+
+// ========== DOM REFS (app) ==========
 const dropzone = document.getElementById('dropzone');
 const fileInput = document.getElementById('fileInput');
 const docList = document.getElementById('docList');
@@ -555,7 +897,7 @@ const speakToggle = document.getElementById('speakToggle');
 let docs = [];
 let totalChunks = 0;
 
-// ---------- Voice input (Speech Recognition) ----------
+// ---------- Voice input ----------
 let recognition = null;
 let isListening = false;
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -589,10 +931,7 @@ if (SpeechRecognition) {
 
   recognition.onend = () => {
     stopListening();
-    // Auto-send once speech finishes, if there's text
-    if (questionInput.value.trim()) {
-      sendQuestion();
-    }
+    if (questionInput.value.trim()) sendQuestion();
   };
 
   micBtn.addEventListener('click', () => {
@@ -600,11 +939,7 @@ if (SpeechRecognition) {
       recognition.stop();
     } else {
       questionInput.value = '';
-      try {
-        recognition.start();
-      } catch (e) {
-        console.warn('Could not start recognition:', e);
-      }
+      try { recognition.start(); } catch (e) { console.warn('Could not start recognition:', e); }
     }
   });
 } else {
@@ -618,47 +953,29 @@ function stopListening() {
   micBtn.textContent = '●';
 }
 
-// ---------- Voice output (Speech Synthesis) ----------
+// ---------- Voice output ----------
 let currentUtterance = null;
 
 function speakText(text, bubbleEl) {
   if (!speakToggle.checked) return;
   if (!('speechSynthesis' in window)) return;
-
   window.speechSynthesis.cancel();
-
-  // Strip anything that looks like a source chip / html before speaking
   const clean = text.replace(/\s+/g, ' ').trim();
   if (!clean) return;
-
   const utter = new SpeechSynthesisUtterance(clean);
   utter.rate = 1.0;
   utter.pitch = 1.0;
   currentUtterance = utter;
-
   const indicator = document.createElement('span');
   indicator.className = 'speaking-indicator';
   indicator.innerHTML = '<span></span><span></span><span></span>';
-
   const stopBtn = document.createElement('button');
   stopBtn.className = 'stop-speak-btn';
   stopBtn.textContent = 'stop';
   stopBtn.onclick = () => window.speechSynthesis.cancel();
-
-  if (bubbleEl) {
-    bubbleEl.appendChild(indicator);
-    bubbleEl.appendChild(stopBtn);
-  }
-
-  utter.onend = () => {
-    if (indicator.parentNode) indicator.remove();
-    if (stopBtn.parentNode) stopBtn.remove();
-  };
-  utter.onerror = () => {
-    if (indicator.parentNode) indicator.remove();
-    if (stopBtn.parentNode) stopBtn.remove();
-  };
-
+  if (bubbleEl) { bubbleEl.appendChild(indicator); bubbleEl.appendChild(stopBtn); }
+  utter.onend = () => { if (indicator.parentNode) indicator.remove(); if (stopBtn.parentNode) stopBtn.remove(); };
+  utter.onerror = () => { if (indicator.parentNode) indicator.remove(); if (stopBtn.parentNode) stopBtn.remove(); };
   window.speechSynthesis.speak(utter);
 }
 
@@ -673,21 +990,17 @@ async function checkHealth() {
     if (res.ok) {
       statusDot.className = 'dot ok';
       statusText.textContent = 'api connected';
-    } else {
-      throw new Error();
-    }
+    } else { throw new Error(); }
   } catch (e) {
     statusDot.className = 'dot bad';
     statusText.textContent = 'api unreachable';
   }
 }
-checkHealth();
-setInterval(checkHealth, 15000);
 
 // ---------- Stats ----------
 async function refreshStats() {
   try {
-    const res = await fetch(`${API_BASE}/stats`);
+    const res = await fetch(`${API_BASE}/stats`, { headers: authHeaders(), credentials: 'include' });
     if (res.ok) {
       const data = await res.json();
       if (data.total_chunks !== undefined) chunkCount.textContent = data.total_chunks;
@@ -699,16 +1012,10 @@ async function refreshStats() {
 dropzone.addEventListener('click', () => fileInput.click());
 dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('drag'); });
 dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
-dropzone.addEventListener('drop', (e) => {
-  e.preventDefault();
-  dropzone.classList.remove('drag');
-  handleFiles(e.dataTransfer.files);
-});
+dropzone.addEventListener('drop', (e) => { e.preventDefault(); dropzone.classList.remove('drag'); handleFiles(e.dataTransfer.files); });
 fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
 
-function handleFiles(files) {
-  [...files].forEach(processFile);
-}
+function handleFiles(files) { [...files].forEach(processFile); }
 
 function renderDocList() {
   if (docs.length === 0) {
@@ -743,22 +1050,22 @@ async function processFile(file) {
       text = await file.text();
     }
 
-    if (!text || text.trim().length < 10) {
-      throw new Error('No readable text found in file');
-    }
+    if (!text || text.trim().length < 10) throw new Error('No readable text found in file');
 
     const docId = `${file.name}-${Date.now()}`;
     const res = await fetch(`${API_BASE}/ingest`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders(),
+      credentials: 'include',
       body: JSON.stringify({
-        text: text,
+        text,
         doc_id: docId,
         metadata: { source: file.name },
         chunking_strategy: 'recursive'
       })
     });
 
+    if (res.status === 401) { handleLogout(); return; }
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.detail || `Server returned ${res.status}`);
@@ -796,10 +1103,7 @@ questionInput.addEventListener('input', () => {
 });
 
 questionInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendQuestion();
-  }
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendQuestion(); }
 });
 
 sendBtn.addEventListener('click', sendQuestion);
@@ -821,10 +1125,7 @@ function addTyping() {
   const msg = document.createElement('div');
   msg.className = 'msg bot';
   msg.id = 'typingMsg';
-  msg.innerHTML = `
-    <div class="avatar">ai</div>
-    <div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>
-  `;
+  msg.innerHTML = `<div class="avatar">ai</div><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
   messages.appendChild(msg);
   messages.scrollTop = messages.scrollHeight;
 }
@@ -855,12 +1156,14 @@ async function sendQuestion() {
   try {
     const res = await fetch(`${API_BASE}/query`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders(),
+      credentials: 'include',
       body: JSON.stringify({ question })
     });
 
     removeTyping();
 
+    if (res.status === 401) { handleLogout(); return; }
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.detail || `Server returned ${res.status}`);
@@ -890,8 +1193,6 @@ async function sendQuestion() {
     sendBtn.disabled = false;
   }
 }
-
-refreshStats();
 </script>
 </body>
 </html>

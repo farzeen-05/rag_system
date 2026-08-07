@@ -19,6 +19,20 @@ import logging
 import structlog
 
 from config import get_settings
+from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.security import OAuth2PasswordRequestForm
+from auth import (
+    USERS_DB, UserIn, Token, hash_password, verify_password,
+    create_access_token, get_current_user, get_google_auth_url,
+    exchange_google_code
+)
+from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.security import OAuth2PasswordRequestForm
+from auth import (
+    USERS_DB, UserIn, Token, hash_password, verify_password,
+    create_access_token, get_current_user, get_google_auth_url,
+    exchange_google_code
+)
 from rag.engine import RAGEngine
 from rag.embeddings import EmbeddingModel
 from rag.retriever import VectorRetriever
@@ -117,13 +131,21 @@ async def serve_frontend():
 # ── Dependency Injection ─────────────────────────────────────────────
 
 def get_engine() -> RAGEngine:
-    """
-    FastAPI Depends() pattern.
-    Instead of accessing app_state directly in each route,
-    we declare the dependency. FastAPI handles calling it.
-    Makes routes cleaner and testable.
-    """
     return app_state["engine"]
+
+def get_user_engine(current_user: str = Depends(get_current_user)) -> RAGEngine:
+    settings = get_settings()
+    safe_user = "".join(c if c.isalnum() else "_" for c in current_user)[:40]
+    collection_name = f"rag_{safe_user}"
+    retriever = VectorRetriever(settings.CHROMA_HOST, settings.CHROMA_PORT, collection_name)
+    return RAGEngine(
+        embedding_model=app_state["embedding_model"],
+        retriever=retriever,
+        llm_client=app_state["llm_client"],
+        chunker=app_state["chunker"],
+        settings=settings,
+    )
+
 
 
 # ── Routes ──────────────────────────────────────────────────────────
@@ -161,7 +183,7 @@ async def readiness_check():
 @app.post("/ingest")
 async def ingest_document(
     request: IngestRequest,
-    engine: RAGEngine = Depends(get_engine)
+    current_user: str = Depends(get_current_user)
 ):
     """
     Index a document into the vector store.
@@ -170,6 +192,7 @@ async def ingest_document(
     - When you add new documents to your knowledge base
     - When you update existing documents (re-index)
     """
+    engine = get_user_engine(current_user)
     try:
         result = engine.ingest_document(
             text=request.text,
@@ -185,12 +208,13 @@ async def ingest_document(
 @app.post("/query")
 async def query_rag(
     request: QueryRequest,
-    engine: RAGEngine = Depends(get_engine)
+    current_user: str = Depends(get_current_user)
 ):
     """
     Main RAG query endpoint.
     Returns answer + sources + retrieved chunks.
     """
+    engine = get_user_engine(current_user)
     try:
         response = engine.query(
             question=request.question,
@@ -206,6 +230,8 @@ async def query_rag(
             "latency_ms": response.latency_ms,
             "model": response.model_used,
             "scores": response.retrieval_scores,
+            "hallucination_risk": response.hallucination_risk,
+            "evidence_sufficient": response.evidence_sufficient,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -215,3 +241,50 @@ async def query_rag(
 async def get_stats(engine: RAGEngine = Depends(get_engine)):
     """Useful for monitoring how many docs are in the vector store."""
     return engine.retriever.get_stats()
+
+
+@app.post("/auth/register", response_model=Token)
+async def register(user: UserIn):
+    if user.username in USERS_DB:
+        raise HTTPException(status_code=400, detail="Username already exists")
+    USERS_DB[user.username] = {
+        "username": user.username,
+        "hashed_password": hash_password(user.password)
+    }
+    token = create_access_token({"sub": user.username})
+    return {"access_token": token, "token_type": "bearer"}
+
+@app.post("/auth/login", response_model=Token)
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    user = USERS_DB.get(form_data.username)
+    if not user or not verify_password(form_data.password, user["hashed_password"]):
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    token = create_access_token({"sub": form_data.username})
+    return {"access_token": token, "token_type": "bearer"}
+
+@app.get("/auth/google")
+async def google_login():
+    return RedirectResponse(get_google_auth_url())
+
+@app.get("/auth/google/callback")
+async def google_callback(code: str):
+    user_info = await exchange_google_code(code)
+    if not user_info:
+        raise HTTPException(status_code=400, detail="Google auth failed")
+    username = user_info.get("email")
+    if username not in USERS_DB:
+        USERS_DB[username] = {"username": username, "hashed_password": None}
+    token = create_access_token({"sub": username})
+    response = RedirectResponse(url="/")
+    response.set_cookie("access_token", token, httponly=True, max_age=86400)
+    return response
+
+@app.get("/auth/me")
+async def get_me(current_user: str = Depends(get_current_user)):
+    return {"username": current_user}
+
+@app.post("/auth/logout")
+async def logout():
+    response = JSONResponse({"message": "Logged out"})
+    response.delete_cookie("access_token")
+    return response

@@ -13,6 +13,7 @@ Alternative: Pinecone (managed, expensive), Weaviate (complex), FAISS (no persis
 
 import chromadb
 from chromadb.config import Settings as ChromaSettings
+from rank_bm25 import BM25Okapi
 from typing import List, Dict, Any, Optional
 import logging
 from dataclasses import dataclass
@@ -131,9 +132,13 @@ class VectorRetriever:
         {"year": {"$gte": 2023}}           → only recent docs
         {"$and": [{"source": "..."}, ...]} → combine conditions
         """
+        available = self.collection.count()
+        if available == 0:
+            return []
+
         results = self.collection.query(
             query_embeddings=[query_embedding],
-            n_results=min(top_k * 2, self.collection.count()),  # Fetch extra for threshold filtering
+            n_results=min(top_k * 2, available),  # Fetch extra for threshold filtering
             where=filter_metadata,
             include=["documents", "metadatas", "distances"]
         )
@@ -246,6 +251,90 @@ class VectorRetriever:
             return 0.0
         return len(words1 & words2) / len(words1 | words2)
     
+    def _rebuild_bm25_index(self):
+        """Rebuild in-memory BM25 index from all documents in ChromaDB.
+        WHY BM25? Vector search finds semantically similar text but can miss
+        exact keyword matches (e.g. product codes, names, acronyms).
+        BM25 is a classic keyword-ranking algorithm — combining both gives
+        better recall than either alone."""
+        try:
+            all_data = self.collection.get(include=["documents", "metadatas"])
+            self._bm25_docs = all_data["documents"]
+            self._bm25_metas = all_data["metadatas"]
+            self._bm25_ids = all_data["ids"]
+            if self._bm25_docs:
+                tokenized = [doc.lower().split() for doc in self._bm25_docs]
+                self._bm25_index = BM25Okapi(tokenized)
+            else:
+                self._bm25_index = None
+        except Exception as e:
+            logger.warning(f"BM25 index rebuild failed: {e}")
+            self._bm25_index = None
+            self._bm25_docs = []
+            self._bm25_metas = []
+            self._bm25_ids = []
+
+    def hybrid_search(
+        self,
+        query_text: str,
+        query_embedding: List[float],
+        top_k: int = 5,
+        alpha: float = 0.8,
+        score_threshold: float = 0.3,
+        filter_metadata: Optional[Dict] = None
+    ) -> List[RetrievedChunk]:
+        """Hybrid retrieval: combines dense vector search with BM25 keyword search.
+        alpha: weight for vector score (1-alpha for BM25 score). 0.6 = favor semantic
+        slightly while still catching exact keyword matches BM25 finds."""
+        vector_results = self.search(
+            query_embedding, top_k=top_k * 3,
+            score_threshold=0.0, filter_metadata=filter_metadata
+        )
+
+        if not hasattr(self, '_bm25_index') or self._bm25_index is None:
+            self._rebuild_bm25_index()
+
+        bm25_scores_by_text = {}
+        if self._bm25_index is not None and self._bm25_docs:
+            tokenized_query = query_text.lower().split()
+            bm25_scores = self._bm25_index.get_scores(tokenized_query)
+            max_bm25 = max(bm25_scores) if len(bm25_scores) > 0 and max(bm25_scores) > 0 else 1.0
+            for doc, score in zip(self._bm25_docs, bm25_scores):
+                normalized = score / max_bm25 if max_bm25 > 0 else 0.0
+                bm25_scores_by_text[doc] = max(0.0, min(1.0, normalized))  # clamp to 0-1
+
+        combined = []
+        for chunk in vector_results:
+            bm25_score = bm25_scores_by_text.get(chunk.text, 0.0)
+            combined_score = alpha * chunk.similarity_score + (1 - alpha) * bm25_score
+            chunk.metadata["vector_score"] = chunk.similarity_score
+            chunk.metadata["bm25_score"] = round(bm25_score, 4)
+            chunk.similarity_score = round(combined_score, 4)
+            if combined_score >= score_threshold:
+                combined.append(chunk)
+
+        combined.sort(key=lambda x: x.similarity_score, reverse=True)
+        return combined[:top_k]
+
+    def rerank(self, chunks: List[RetrievedChunk], query_text: str, top_k: int = 5) -> List[RetrievedChunk]:
+        """Lightweight second-stage reranking.
+        WHY TWO-STAGE? Stage 1 (ANN/BM25) is fast but approximate — good for
+        narrowing 1000s of docs to ~20 candidates. Stage 2 reranking does a
+        more careful, query-aware scoring pass over just those candidates,
+        which is too slow to run over the whole corpus but fine for 20 items."""
+        query_terms = set(query_text.lower().split())
+
+        for chunk in chunks:
+            text_terms = set(chunk.text.lower().split())
+            term_overlap = len(query_terms & text_terms) / max(len(query_terms), 1)
+            # Reward chunks with more exact term overlap AND high base similarity
+            rerank_score = 0.7 * chunk.similarity_score + 0.3 * term_overlap
+            chunk.metadata["rerank_score"] = round(rerank_score, 4)
+            chunk.similarity_score = round(rerank_score, 4)
+
+        chunks.sort(key=lambda x: x.similarity_score, reverse=True)
+        return chunks[:top_k]
+
     def delete_document(self, doc_id: str) -> None:
         """Delete all chunks from a document (for updates/re-indexing)."""
         self.collection.delete(where={"doc_id": {"$eq": doc_id}})
