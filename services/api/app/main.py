@@ -19,6 +19,9 @@ import logging
 import structlog
 
 from config import get_settings
+from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+from fastapi import Response
+import monitoring
 from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from auth import (
@@ -126,6 +129,12 @@ app.add_middleware(
 @app.get("/")
 async def serve_frontend():
     return FileResponse("static_index.html")
+
+@app.get("/metrics")
+async def metrics():
+    """Prometheus scrape endpoint. No auth — internal cluster access only via k8s network policy in production."""
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
 
 
 # ── Dependency Injection ─────────────────────────────────────────────

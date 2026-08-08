@@ -8,6 +8,7 @@ import hashlib
 from rag.embeddings import EmbeddingModel
 from rag.chunker import DocumentChunker, Chunk
 from rag.retriever import VectorRetriever, RetrievedChunk
+from monitoring import RAG_QUERIES_TOTAL, RAG_QUERY_LATENCY, RETRIEVAL_SCORE_AVG, VECTOR_STORE_SIZE
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +77,7 @@ class RAGEngine:
               score_threshold: Optional[float] = None) -> RAGResponse:
 
         start = time.time()
+        _metrics_status = "success"
 
         # ── Check cache first ─────────────────────────────────────
         cache_key = _cache_key(question, top_k)
@@ -83,6 +85,8 @@ class RAGEngine:
             logger.info(f"Cache hit for query: {question[:50]}")
             cached = _query_cache[cache_key]
             cached.latency_ms = 0.0
+            RAG_QUERIES_TOTAL.labels(status="cache_hit").inc()
+            RAG_QUERY_LATENCY.observe(time.time() - start)
             return cached
 
         # ── Retrieve ──────────────────────────────────────────────
@@ -102,6 +106,8 @@ class RAGEngine:
         evidence_sufficient = self._check_evidence(scored_chunks)
 
         if not evidence_sufficient:
+            RAG_QUERIES_TOTAL.labels(status="insufficient_evidence").inc()
+            RAG_QUERY_LATENCY.observe(time.time() - start)
             response = RAGResponse(
                 answer="I don't have sufficient evidence in the uploaded documents to answer this question confidently. Please upload relevant documents or rephrase your question.",
                 sources=[],
@@ -150,6 +156,14 @@ class RAGEngine:
 
         # ── Cache result ──────────────────────────────────────────
         _query_cache[cache_key] = response
+        RAG_QUERIES_TOTAL.labels(status="success").inc()
+        RAG_QUERY_LATENCY.observe(time.time() - start)
+        if response.retrieval_scores:
+            RETRIEVAL_SCORE_AVG.set(sum(response.retrieval_scores) / len(response.retrieval_scores))
+        try:
+            VECTOR_STORE_SIZE.set(self.retriever.get_stats().get("total_chunks", 0))
+        except Exception:
+            pass
         return response
 
     def _score_chunks(self, chunks: List[RetrievedChunk], question: str) -> List[RetrievedChunk]:
